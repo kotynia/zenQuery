@@ -16,4 +16,4 @@ This tool is for you!
 
 # Notes
 zenQuery was build about 9 years ago (2005) by me,  i dig it from my old drive, and found still usefull.
-If you want participate, revive or create new functionalities (unfortunettly very last code is missing). 
+If you want participate, revive or create new functionalities (unfortunettly very last code is missing) join me. 
