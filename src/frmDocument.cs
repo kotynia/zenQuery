@@ -5,7 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using mk.Logic;
-using ScintillaNet;
+using ScintillaNET;
 using WeifenLuo.WinFormsUI.Docking;
 using System.Collections.Generic;
 using System.Text;

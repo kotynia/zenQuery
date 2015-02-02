@@ -127,7 +127,7 @@ namespace zenQuery.Logic
         }
 
 
-        private ScintillaNet.Scintilla document;
+        private ScintillaNET.Scintilla document;
 
 
         public ToolStripMenuItem MenuItemCut
@@ -171,7 +171,7 @@ namespace zenQuery.Logic
 
 
         //Utworzenie  menu
-        public ContextMenuStrip GetContextMenuStrip(Control parent, ref ScintillaNet.Scintilla doc)
+        public ContextMenuStrip GetContextMenuStrip(Control parent, ref ScintillaNET.Scintilla doc)
         {
             document = doc;
 

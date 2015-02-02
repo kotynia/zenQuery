@@ -49,7 +49,7 @@
             this.cboDatabase = new System.Windows.Forms.ComboBox();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.splQuery = new System.Windows.Forms.SplitContainer();
-            this.sciDocument = new ScintillaNet.Scintilla();
+            this.sciDocument = new ScintillaNET.Scintilla();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.panRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.panExecTime)).BeginInit();
@@ -287,11 +287,11 @@
         private System.Windows.Forms.Panel panDatabase;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cboDatabase;
-        //private ScintillaNet.Scintilla scintilla1;
+        //private ScintillaNET.Scintilla scintilla1;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.SplitContainer splQuery;
         private System.Windows.Forms.ImageList imageList;
-        private ScintillaNet.Scintilla sciDocument;
-        //private ScintillaNet.Scintilla scintilla2;
+        private ScintillaNET.Scintilla sciDocument;
+        //private ScintillaNET.Scintilla scintilla2;
 	}
 }

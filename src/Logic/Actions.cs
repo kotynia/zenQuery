@@ -63,7 +63,7 @@ RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled)
         /// 2	browser snippets Browser Snippets
         /// </param>
         /// <param name="_provider">ORACLE,MSSQL,ALL </param>
-        public static void fillSnippets(ref ScintillaNet.Scintilla doc, int _type, string _provider)
+        public static void fillSnippets(ref ScintillaNET.Scintilla doc, int _type, string _provider)
         {
             mk.Logic.simpleDebug.dump();
 

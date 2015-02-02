@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using mk.Logic;
-using ScintillaNet;
+using ScintillaNET;
 namespace zenQuery
 {
     public partial class frmMdi : Form
@@ -413,14 +413,16 @@ namespace zenQuery
             simpleDebug.dump();
             wordWrapToolStripMenuItem.Checked = !wordWrapToolStripMenuItem.Checked;
 
-            if (wordWrapToolStripMenuItem.Checked)
-            {
-                ActiveDocument.Document.LineWrap.Mode = WrapMode.Word;
-            }
-            else
-            {
-                ActiveDocument.Document.LineWrap.Mode = WrapMode.None;
-            }
+
+            //TODO find new method
+            //if (wordWrapToolStripMenuItem.Checked)
+            //{
+            //    ActiveDocument.Document.LineWrapping.Mode = LineWrapping.Word;
+            //}
+            //else
+            //{
+            //    ActiveDocument.Document.LineWrap.Mode = WrapMode.None;
+            //}
         }
 
         private void endOfLineToolStripMenuItem_Click(object sender, EventArgs e)
@@ -433,19 +435,19 @@ namespace zenQuery
         private void zoomInToolStripMenuItem_Click(object sender, EventArgs e)
         {
             simpleDebug.dump();
-            ActiveDocument.Document.Zoom++;
+            ActiveDocument.Document.ZoomIn();
         }
 
         private void zoomOutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             simpleDebug.dump();
-            ActiveDocument.Document.Zoom--;
+            ActiveDocument.Document.ZoomOut();
         }
 
         private void resetZoomToolStripMenuItem_Click(object sender, EventArgs e)
         {
             simpleDebug.dump();
-            ActiveDocument.Document.Zoom = 0;
+            ActiveDocument.Document.ZoomFactor = 0;
         }
 
         private void foldLevelToolStripMenuItem_Click(object sender, EventArgs e)

@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.IO;
 using mk.Logic;
-using ScintillaNet;
+using ScintillaNET;
 using System.Collections;
 using System.Collections.Generic;
 namespace crycore
