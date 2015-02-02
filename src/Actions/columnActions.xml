@@ -1,0 +1,45 @@
+#*MANUAL*
+# - COMMENT
+# Author 
+# DESCRIPTION - no comments :),  but must be unique
+# zenACTION - SNIPPET BODY
+# DATABASE - database where snippet will appear empty(default)
+# TYPE - 1 query window snippet; 2 browser snippet (default) 
+# PROVIDER - ORACLE;MSSQL(default); or empty
+# OBJECTTYPE - U user table; S system table; V view; P Procedure(Package); FN function; CO Column; XX DOCUMENT(dedault)
+# possible multiple values [U] [V]
+# OBJECTMASK - REGEX for object NAME
+# parameters [[objectname]],[[objecttype]],[[objectnameprefix]],[[parentobjectname]], [[exec]] -execute procedure, [[database]] 
+# sql <<sql[""|""|false|false] select count(*) from [[objectname]] >>  Warning only first column 
+
+
+
+<zenITEM>
+	<zenAUTHOR>Marcin Kotynia, 2007</zenAUTHOR>
+	<zenDESCRIPTION>Alter Column</zenDESCRIPTION>
+	<zenTYPE>2</zenTYPE>
+	<zenDATABASE></zenDATABASE>
+	<zenPROVIDER>MSSQL</zenPROVIDER>
+	<zenOBJECTTYPE>[CO]</zenOBJECTTYPE>
+	<zenOBJECTMASK></zenOBJECTMASK>
+<zenACTION>
+ALTER TABLE [[parentobjectname]] ALTER COLUMN [[objectname]] nVARCHAR(100)
+GO
+/****************HELP*****************
+Exact Numerics
+ bigint, decimal, int, numeric, smallint, money, tinyint, smallmoney, bit 
+Approximate Numerics
+ float, real 
+Date and Time
+ datetime, smalldatetime  
+Character Strings
+ char, text, varchar 
+Unicode Character Strings
+ nchar, ntext, nvarchar 
+Binary Strings
+ binary, image, varbinary 
+Other Data Types
+ cursor, timestamp, sql_variant, uniqueidentifier, table,  xml 
+****************HELP*****************/
+</zenACTION>
+</zenITEM>

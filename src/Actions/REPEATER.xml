@@ -1,0 +1,60 @@
+#*MANUAL*
+# - COMMENT
+# Author 
+# DESCRIPTION - no comments :),  but must be unique
+# zenACTION - SNIPPET BODY
+# DATABASE - database where snippet will appear empty(default)
+# TYPE - 1 query window snippet; 2 browser snippet (default) 
+# PROVIDER - ORACLE;MSSQL(default); or empty
+# OBJECTTYPE - U user table; S system table; V view; P Procedure(Package); FN function; CO Column; XX DOCUMENT(dedault)
+# possible multiple values [U] [V]
+# OBJECTMASK - REGEX for object NAME
+# parameters [[objectname]],[[objecttype]],[[objectnameprefix]],[[parentobjectname]], [[exec]] -execute procedure, [[database]] 
+# sql <<sql[""|""|false|false] select count(*) from [[objectname]] >>  Warning only first column 
+<zenITEM>
+	<zenAUTHOR>Marcin Kotynia, 2007</zenAUTHOR>
+	<zenDESCRIPTION>GENEROWANIE REPEATER</zenDESCRIPTION>
+	<zenTYPE>2</zenTYPE>
+	<zenDATABASE></zenDATABASE>
+	<zenPROVIDER>MSSQL</zenPROVIDER>
+	<zenOBJECTTYPE>[U]</zenOBJECTTYPE>
+	<zenOBJECTMASK></zenOBJECTMASK>
+	<zenACTION>
+--|--------------------------------------------------------------------------------
+--| ASP.NET REPEATER EDYTOR np slownikow
+--|--------------------------------------------------------------------------------	
+<div class="thead"> 
+<ul> 
+<li><asp:LinkButton ID="lnkSave" runat="server" CssClass="sav">< %= crycore.Tools.Res("save")%></asp:LinkButton></li>
+<li><a href="javascript:window.selectNode(document.getElementById('t1'));"><%= PoleLabel.format("zaznacz tabelê")%></a></li>
+<li><%= PoleLabel.format("filtr")%>:<input name="filter" onkeyup="filter2(this, 't1')" type="text"/></li>
+</ul>
+</div> 
+<asp:Literal ID="info" runat="server"  EnableViewState ="false" ></asp:Literal>
+<asp:Repeater ID="R1" runat="server" DataSourceID="SD1">
+<HeaderTemplate >
+<table id="t1" class="t">
+<thead><tr><%=RepeaterHeader%></tr>
+</thead><tbody>
+</HeaderTemplate>
+<ItemTemplate >
+<tr>
+
+<input type="checkbox" value='<%# Eval("priceid")%>' id="chk" runat="server" tabindex="-1"/> 
+<<sql[
+<tr><td><%# crycore.Tools.Res("tagtype")%></td><td><asp:TextBox id="txttagtype" cssclass="req" Text='<%# Bind("tagtype") %>' runat="server"></asp:TextBox></td></tr>||false|false] SELECT column_name FROM INFORMATION_SCHEMA.columns WHERE table_name= '[[objectname]]' >>
+
+
+</tr>
+</ItemTemplate>
+<FooterTemplate></tbody></table></FooterTemplate>
+</asp:Repeater>
+
+
+<crycore:ccSqlDatasource ID="SD1" runat="server" 
+ConnectionString="< %$ ConnectionStrings:DSN %>" 
+SelectCommand="SELECT 	<%= insertFields %> FROM <%= tableName %> ">
+</crycore:ccSqlDatasource>
+
+	</zenACTION>
+	</zenITEM>

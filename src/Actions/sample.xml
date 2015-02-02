@@ -1,0 +1,40 @@
+#*MANUAL*
+# - COMMENT
+# Author 
+# DESCRIPTION - no comments :),  but must be unique
+# zenACTION - SNIPPET BODY
+# DATABASE - database where snippet will appear empty(default)
+TYPE - 1 query window snippet; 2 browser snippet 
+# PROVIDER - ORACLE;MSSQL(default); or empty
+# OBJECTTYPE - U user table; S system table; V view; P Procedure(Package); FN function; CO Column; XX DOCUMENT(dedault)
+# possible multiple values [U] [V]
+# OBJECTMASK - REGEX for object NAME
+# parameters [[objectname]],[[objecttype]],[[objectnameprefix]],[[parentobjectname]], [[exec]] -execute procedure, [[database]] 
+<zenitem>
+<zenAUTHOR>Marcin Kotynia 2009</zenAUTHOR>
+<zenDESCRIPTION>must be unique</zenDESCRIPTION>
+<zenTYPE></zenTYPE>
+<zenDATABASE> </zenDATABASE>
+<zenPROVIDER> </zenPROVIDER>
+<zenOBJECTTYPE> </zenOBJECTTYPE>
+<zenOBJECTMASK> </zenOBJECTMASK>
+<zenACTION>
+ALTER TABLE [[objectname]] ADD @COLUMNNAME@  VARCHAR(20)  NULL ;
+/****************HELP*****************
+Exact Numerics
+ bigint, decimal, int, numeric, smallint, money, tinyint, smallmoney, bit 
+Approximate Numerics
+ float, real 
+Date and Time
+ datetime, smalldatetime  
+Character Strings
+ char, text, varchar 
+Unicode Character Strings
+ nchar, ntext, nvarchar 
+Binary Strings
+ binary, image, varbinary 
+Other Data Types
+ cursor, timestamp, sql_variant, uniqueidentifier, table,  xml 
+****************HELP*****************/
+</zenACTION>
+</zenitem>

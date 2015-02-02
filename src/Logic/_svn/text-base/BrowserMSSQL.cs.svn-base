@@ -1,0 +1,227 @@
+﻿using System;
+using System.Collections.Specialized;
+using System.Data;
+using System.Data.SQLite;
+using System.Text;
+using System.Windows.Forms;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace zenQuery
+{
+ /// <summary>
+    /// An implementation of IBrowser for MS SQL Server.
+    /// </summary>
+    public class SqlBrowser : IBrowser
+    {
+
+        class SqlNode : TreeNode
+        {
+            internal string type = "";
+            internal string name, owner, safeName, dragText;
+            public SqlNode(string text) : base(text) { }
+        }
+
+        const int timeout = 8;
+        DbClient dbClient;
+
+        public SqlBrowser(DbClient dbClient)
+        {
+            this.dbClient = dbClient;
+        }
+
+        public DbClient DbClient
+        {
+            get { return dbClient; }
+        }
+
+        public TreeNode[] GetObjectHierarchy()
+        {
+            mk.Logic.simpleDebug.dump();
+            TreeNode[] top = new TreeNode[]
+			{
+				new TreeNode ("User Tables"),
+				new TreeNode ("System Tables"),
+				new TreeNode ("Views"),
+				new TreeNode ("User Stored Procs"),
+				new TreeNode ("MS Stored Procs"),
+				new TreeNode ("Functions")
+			};
+
+            string version = dbClient.ExecuteScalar("select SERVERPROPERTY('productversion')", timeout) as string;
+            string schemaFunc = version != null && (version[0] == '9' || version[0] == '1') ? "schema_name" : "user_name";
+
+            DataSet ds = dbClient.Execute(
+                        @"select 
+	                    type,
+	                    ObjectProperty (id, N'IsMSShipped') shipped, 
+	                    object_name(id) object, 
+	                    " + schemaFunc + @"(uid) owner 
+                        from sysobjects 
+                        where type in (N'U', N'S', N'V', N'P', N'FN') 
+                        order by object, owner", timeout);
+            if (ds == null || ds.Tables.Count == 0) return null;
+
+            foreach (DataRow row in ds.Tables[0].Rows)
+            {
+
+                string type = row["type"].ToString().Substring(0, 2).Trim();
+
+                int position;
+                if (type == "U") position = 0; 										// user table
+                else if (type == "S") position = 1;								// system table
+                else if (type == "V") position = 2;								// view
+                else if (type == "FN") position = 5;								// function
+                else if ((int)row["shipped"] == 0) position = 3;				// user stored proc
+                else position = 4;														// MS stored proc
+
+                string prefix = row["owner"].ToString() == "dbo" ? "" : row["owner"].ToString() + ".";
+                SqlNode node = new SqlNode(prefix + row["object"].ToString());
+                node.type = type;
+                node.name = row["object"].ToString();
+                node.owner = row["owner"].ToString();
+
+                // If the object name contains a space, wrap the "safe name" in square brackets.
+                if (node.owner.IndexOf(' ') >= 0 || node.name.IndexOf(' ') >= 0)
+                {
+                    node.safeName = "[" + node.name + "]";
+                    node.dragText = "[" + node.owner + "].[" + node.name + "]";
+                }
+                else
+                {
+                    node.safeName = node.name;
+                    node.dragText = node.owner + "." + node.name;
+                }
+                if (node.owner != "" && node.owner.ToLower() != "dbo")
+                    node.safeName = node.dragText;
+
+                switch (type)
+                {
+
+                    case "U":// user table
+                        //node.ImageIndex = 1;
+                        break;
+                    case "S":// system table
+                        //node.ImageIndex = 1;
+                        break;
+                    case "V":// view
+                        //node.ImageIndex = 1;
+                        break;
+                    case "P":// user stored proc
+                        //node.ImageIndex = 1;
+                        break;
+
+                    case "FN":// function
+                        //node.ImageIndex = 1;
+
+                        break;
+                }
+                top[position].Nodes.Add(node);
+
+                // Add a dummy sub-node to user tables and views so they'll have a clickable expand sign
+                // allowing us to have GetSubObjectHierarchy called so the user can view the columns
+                if (type == "U" || type == "V") node.Nodes.Add(new TreeNode());
+            }
+            return top;
+        }
+        /// <summary>
+        /// Get columns to view and table
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public TreeNode[] GetSubObjectHierarchy(TreeNode node)
+        {
+            mk.Logic.simpleDebug.dump();
+            // Show the column breakdown for the selected table
+            if (node is SqlNode)
+            {
+                SqlNode sn = (SqlNode)node;
+                if (sn.type == "U" || sn.type == "V")					// break down columns for user tables and views
+                {
+                    DataSet ds = dbClient.Execute("select COLUMN_NAME name, DATA_TYPE type, CHARACTER_MAXIMUM_LENGTH clength, NUMERIC_PRECISION nprecision, NUMERIC_SCALE nscale, IS_NULLABLE nullable, COLUMN_DEFAULT  from INFORMATION_SCHEMA.COLUMNS where TABLE_CATALOG = db_name() and TABLE_SCHEMA = '"
+                        + sn.owner + "' and TABLE_NAME = '" + sn.name + "' order by ORDINAL_POSITION", timeout);
+                    if (ds == null || ds.Tables.Count == 0) return null;
+
+                    //
+                   
+
+                    TreeNode[] tn = new SqlNode[ds.Tables[0].Rows.Count];
+                    int count = 0;
+
+                    string nCOLUMN_DEFAULT ;
+
+                  //  _autoComplete.Add(sn.name,sn.name); //dodanie tabeli  
+
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+                     //   _autoComplete.Add(sn.name +'.'+ row["name"].ToString(), sn.name); //dodanie pola
+
+                        string length;
+                        if (row["clength"].ToString() != "")
+                            length = "(" + row["clength"].ToString() + ")";
+                        else if (row["nprecision"].ToString() != "")
+                            length = "(" + row["nprecision"].ToString() + "," + row["nscale"].ToString() + ")";
+                        else length = "";
+
+                        string nullable = row["nullable"].ToString().StartsWith("Y") ? "null" : "not null";
+                        
+                        nCOLUMN_DEFAULT = row["COLUMN_DEFAULT"].ToString(); 
+                        SqlNode column ;
+
+                        if (string.IsNullOrEmpty( nCOLUMN_DEFAULT))
+                            column = new SqlNode(string.Format( "{0}  [{1}] [{2}]" ,row["name"].ToString(), row["type"].ToString() + length,nullable )  );                   
+                        else
+                            column = new SqlNode(string.Format( "{0}  [{1}] [{2}] [{3}]" ,row["name"].ToString(), row["type"].ToString() + length,nullable ,nCOLUMN_DEFAULT ) );                   
+  
+                            
+                        
+                        column.type = "CO";			// column
+                        column.dragText = row["name"].ToString();
+                        if (column.dragText.IndexOf(' ') >= 0)
+                            column.dragText = "[" + column.dragText + "]";
+                        column.safeName = column.dragText;
+                        tn[count++] = column;
+                    }
+                    return tn;
+                }
+            }
+            return null;
+        }
+
+        public string GetDragText(TreeNode node)
+        {
+            mk.Logic.simpleDebug.dump();
+            if (node is SqlNode)
+                return ((SqlNode)node).dragText;
+            else
+                return "";
+        }
+
+
+
+
+
+
+        public string[] GetDatabases()
+        {
+            mk.Logic.simpleDebug.dump();
+            // cool, but only supported in SQL Server 2000+
+            DataSet ds = dbClient.Execute("dbo.sp_MShasdbaccess", timeout);
+            // works in SQL Server 7...
+            if (ds == null || ds.Tables.Count == 0)
+                ds = dbClient.Execute("select name from master.dbo.sysdatabases order by name", timeout);
+            if (ds == null || ds.Tables.Count == 0) return null;
+            string[] sa = new string[ds.Tables[0].Rows.Count];
+            int count = 0;
+            foreach (DataRow row in ds.Tables[0].Rows)
+                sa[count++] = row[0].ToString().Trim();
+            return sa;
+        }
+
+        public IBrowser Clone(DbClient newDbClient)
+        {
+            SqlBrowser sb = new SqlBrowser(newDbClient);
+            return sb;
+        }
+    }
+}
