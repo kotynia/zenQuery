@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Windows.Forms;
+using WeifenLuo.WinFormsUI.Docking;
 using zenQuery.Logic;
 using zenQuery.Properties;
 namespace zenQuery
 {
-    public partial class frmSearch : Form
+    public partial class frmSearch : DockContent
     {
         /// <summary>
         /// 
@@ -44,6 +45,7 @@ namespace zenQuery
                     //TODO: dla oracle
                     break;
             case "MSSQL":
+                    strsql = strsql.Replace("[", "[[]");
 
                     if (text)
                     {
@@ -60,6 +62,8 @@ namespace zenQuery
 
             try
             {
+            
+
       DS = dbClient.Execute(strsqlresult, 30);
             dgvSearch.DataSource = DS.Tables[0].DefaultView ;
             dgwidth();

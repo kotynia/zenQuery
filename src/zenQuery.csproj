@@ -32,7 +32,7 @@
     <ApplicationIcon>zenquery_logo.ico</ApplicationIcon>
     <NuGetPackageImportStamp>38318da6</NuGetPackageImportStamp>
     <TargetFrameworkProfile />
-    <PublishUrl>F:\!projekty\sqlHere\zenQuery_deploy\</PublishUrl>
+    <PublishUrl>c:\5\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -45,7 +45,7 @@
     <SupportUrl>http://sqlhere.com/zenquery.aspx</SupportUrl>
     <PublisherName>Marcin Kotynia</PublisherName>
     <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationRevision>1</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>

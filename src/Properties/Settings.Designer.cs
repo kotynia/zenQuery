@@ -26,7 +26,7 @@ namespace zenQuery.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("select syso.name from syscomments sysc  ,sysobjects syso\r\nwhere syso.id = sysc.id" +
-            " \r\nand  text like \'%[[objectname]]%\' order by  syso.name")]
+            " \r\nand  text like N\'%[[objectname]]%\' order by  syso.name")]
         public string mssqlSearchText {
             get {
                 return ((string)(this["mssqlSearchText"]));

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace zenQuery
 {
- /// <summary>
+    /// <summary>
     /// An implementation of IBrowser for MS SQL Server.
     /// </summary>
     public class SqlBrowser : IBrowser
@@ -31,7 +31,7 @@ namespace zenQuery
         /// <param name="type">"simple"-proste ;"actions"-akcje ze snippetow, "history"-historia dla obiektu </param>
         /// <returns></returns>
 
-        public  StringCollection GetActionList(TreeNode node, string type)
+        public StringCollection GetActionList(TreeNode node, string type)
         {
 
             mk.Logic.simpleDebug.dump();
@@ -53,7 +53,7 @@ namespace zenQuery
                     //Views (V) 
 
                     if (sn.type == "V" || sn.type == "P" || sn.type == "FN" || sn.type == "IF" || sn.type == "TF" || sn.type == "TR")
-                        output.Add("View / Modify " + sn.name);
+                        output.Add("Alter");
 
                     //if (sn.type == "CO" && ((SqlNode)sn.Parent).type == "U")
                     //    output.Add("Alter column...");
@@ -61,7 +61,7 @@ namespace zenQuery
                     if (sn.type == "U" || sn.type == "S" || sn.type == "V")
                     {
                         output.Add("select top 100  * from " + sn.safeName + " order by 1 desc");
-                        output.Add("sp_help " + sn.safeName);
+                        output.Add((string.Format("sp_spaceused '{0}' ", sn.safeName)));
                         //output.Add("(insert all fields)");
                         //output.Add("(insert all fields, table prefixed)");
                     }
@@ -115,7 +115,7 @@ namespace zenQuery
         /// TODO: trzeb ato ladniej zrobic
         /// Pobiera text dla pozycji z menu kontekstowego
         /// </summary>
-        public  string GetActionText(TreeNode node, string action)
+        public string GetActionText(TreeNode node, string action)
         {
 
 
@@ -144,9 +144,9 @@ namespace zenQuery
                 return "";//allFieldsCommaSeparated.Length == 0 ? null : allFieldsCommaSeparated;
             }
 
-            if (action.StartsWith("View / Modify "))
+            if (action == "Alter")
             {
-                DataSet ds = this.dbClient.Execute("sp_helptext " + sn.safeName, dbClient.Connection.ConnectionTimeout);
+                DataSet ds = this.dbClient.Execute(string.Format("sp_helptext '{0}' ", sn.safeName), dbClient.Connection.ConnectionTimeout);
                 if (ds == null || ds.Tables.Count == 0) return null;
 
                 StringBuilder sb = new StringBuilder();
@@ -166,29 +166,8 @@ namespace zenQuery
             }
 
 
-            SQLiteDataReader dr;
+            //SQLiteDataReader dr;
 
-            int startPoint;
-
-            startPoint = action.IndexOf("[");
-            if (startPoint > -1)
-            {
-                startPoint += 1;
-                int endPoint = action.IndexOf("]", startPoint);
-                temp = action.Substring(startPoint, endPoint - startPoint);
-                int rowid = int.Parse(temp); //ekstrakcja komendy
-                dr = mk.msqllite.GetDataReader("select SQL ,USERNAME,LOGIN,SERVER,DATABASE,TIME,HOST,rows from sqlhist where rowid =" + rowid + "   ");
-
-                if (dr != null)
-                    while (dr.Read())
-                    {
-                        temp = string.Format("/*Username:{0} Login:{1} HOST:{2}\nServer:{3} Database:{4} Time:{5} Rows:{6}*/\n{7}", dr["USERNAME"], dr["LOGIN"], dr["HOST"], dr["SERVER"], dr["DATABASE"], dr["TIME"], dr["rows"], dr["sql"]);
-                    }
-                if (dr != null)
-                    dr.Close();
-
-                return temp;
-            }
 
 
 
@@ -196,50 +175,6 @@ namespace zenQuery
             //if (action == "Alter column...")
             //    return "alter table " + ((SqlNode)sn.Parent).dragText + " alter column " + sn.safeName + " ";
 
-
-
-            dr = mk.msqllite.GetDataReader("select strsql from tblsnipitem where type =2 and (provider = '" + dbClient.providerr + "' or provider = '')  and  description ='" + action + "'   ");
-
-
-            while (dr.Read())
-            {
-
-                temp = dr["strsql"].ToString();
-                temp = temp.Replace("[[objectname]]", (string.IsNullOrEmpty(sn.name) ? sn.safeName : sn.name)); //w kolumnie name jest pusty dlatego biezemy safename
-                temp = temp.Replace("[[objecttype]]", sn.type);
-                temp = temp.Replace("[[objectnameprefix]]", sn.safeName);
-                temp = temp.Replace("[[database]]", dbClient.Database);
-
-                if (((TreeNode)sn.Parent).Text != null)
-                    temp = temp.Replace("[[parentobjectname]]", ((TreeNode)sn.Parent).Text);
-
-                //wykonanie gdyby trzeba bylo tutaj musi byc zastepowane i szukac
-
-                //sprawdzenei czy nie ma sql-i do wykonania
-
-
-                //Pobranie komendy SQL <<sql[""|""|false|false] select count(*) from [[objectname]] >>
-                string TextPart;
-                int endPoint;
-                crycore.actions.getText(temp, "<<sql", ">>", out  TextPart, out  endPoint);
-
-                //Pobranie opcji [""|""|false|false]
-                string Options;
-                crycore.actions.getText(TextPart, "[", "]", out  Options, out  endPoint);
-
-                string sql = TextPart.Remove(0, endPoint + 1);
-
-                string result = crycore.actions.getactionTextSqlParam(sql, Options, ref dbClient);
-                //Wykonanie
-                temp = temp.Replace("<<sql" + TextPart + ">>", result);
-
-
-
-                dr.Close();
-                return temp;
-
-            }
-            dr.Close();
             //jelsi nic z powyzszych wtedy zworc text
 
             return action.ToString();
@@ -285,24 +220,26 @@ namespace zenQuery
 	                    object_name(id) object, 
 	                    " + schemaFunc + @"(uid) owner 
                         from sysobjects 
-                        where type in (N'U', N'S', N'V', N'P', N'FN', N'IF', N'TF', N'TR')   order by object, owner", timeout); // and   object_name(id) like  '%" + filter + "%'
+                        where type in (N'U', N'S', N'V', N'P', N'FN', N'IF', N'TF', N'TR')   order by  owner,object", timeout); // and   object_name(id) like  '%" + filter + "%'
             if (ds == null || ds.Tables.Count == 0) return null;
+
+           // string owner = "#$";
 
             foreach (DataRow row in ds.Tables[0].Rows)
             {
 
                 string type = row["type"].ToString().Substring(0, 2).Trim();
 
-                int position  ;
-                if (type == "U") position = 0; 		
-                else if (type == "V") position = 1;			
-                else if (type == "FN") position = 3;							
+                int position;
+                if (type == "U") position = 0;
+                else if (type == "V") position = 1;
+                else if (type == "FN") position = 3;
                 else if (type == "IF") position = 3;
                 else if (type == "TF") position = 4;
                 else if (type == "TR") position = 5;
                 else if (type == "P") position = 2;
                 // else if ((int)row["shipped"] == 0) position = 2;			
-                else  continue;    //position = 2;										
+                else continue;    //position = 2;										
 
                 //Procedures (P) 
                 //Scalar Funtions (FN) 
@@ -320,6 +257,7 @@ namespace zenQuery
                 node.type = type;
                 node.name = row["object"].ToString();
                 node.owner = row["owner"].ToString();
+
 
                 // If the object name contains a space, wrap the "safe name" in square brackets.
                 if (node.owner.IndexOf(' ') >= 0 || node.name.IndexOf(' ') >= 0)
@@ -349,6 +287,7 @@ namespace zenQuery
                         break;
                     case "P":// user stored proc
                         //node.ImageIndex = 1;
+
                         break;
 
                     case "FN":// function
@@ -381,18 +320,18 @@ namespace zenQuery
                     DataSet ds = dbClient.Execute("select COLUMN_NAME name, DATA_TYPE type, CHARACTER_MAXIMUM_LENGTH clength, NUMERIC_PRECISION nprecision, NUMERIC_SCALE nscale, IS_NULLABLE nullable, COLUMN_DEFAULT  from INFORMATION_SCHEMA.COLUMNS where TABLE_CATALOG = db_name() and TABLE_SCHEMA = '"
                         + sn.owner + "' and TABLE_NAME = '" + sn.name + "' order by ORDINAL_POSITION", timeout);
                     if (ds == null || ds.Tables.Count == 0) return null;
-                   
+
 
                     TreeNode[] tn = new SqlNode[ds.Tables[0].Rows.Count];
                     int count = 0;
 
-                    string nCOLUMN_DEFAULT ;
+                    string nCOLUMN_DEFAULT;
 
-                  //  _autoComplete.Add(sn.name,sn.name); //dodanie tabeli  
+                    //_autoComplete.Add(sn.name,sn.name); //dodanie tabeli  
 
                     foreach (DataRow row in ds.Tables[0].Rows)
                     {
-                     //   _autoComplete.Add(sn.name +'.'+ row["name"].ToString(), sn.name); //dodanie pola
+                        //   _autoComplete.Add(sn.name +'.'+ row["name"].ToString(), sn.name); //dodanie pola
 
                         string length;
                         if (row["clength"].ToString() != "")
@@ -402,17 +341,17 @@ namespace zenQuery
                         else length = "";
 
                         string nullable = row["nullable"].ToString().StartsWith("Y") ? "null" : "not null";
-                        
-                        nCOLUMN_DEFAULT = row["COLUMN_DEFAULT"].ToString(); 
-                        SqlNode column ;
 
-                        if (string.IsNullOrEmpty( nCOLUMN_DEFAULT))
-                            column = new SqlNode(string.Format( "{0}  [{1}] [{2}]" ,row["name"].ToString(), row["type"].ToString() + length,nullable )  );                   
+                        nCOLUMN_DEFAULT = row["COLUMN_DEFAULT"].ToString();
+                        SqlNode column;
+
+                        if (string.IsNullOrEmpty(nCOLUMN_DEFAULT))
+                            column = new SqlNode(string.Format("{0}  [{1}] [{2}]", row["name"].ToString(), row["type"].ToString() + length, nullable));
                         else
-                            column = new SqlNode(string.Format( "{0}  [{1}] [{2}] [{3}]" ,row["name"].ToString(), row["type"].ToString() + length,nullable ,nCOLUMN_DEFAULT ) );                   
-  
-                            
-                        
+                            column = new SqlNode(string.Format("{0}  [{1}] [{2}] [{3}]", row["name"].ToString(), row["type"].ToString() + length, nullable, nCOLUMN_DEFAULT));
+
+
+
                         column.type = "CO";			// column
                         column.dragText = row["name"].ToString();
                         if (column.dragText.IndexOf(' ') >= 0)

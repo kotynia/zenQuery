@@ -16,7 +16,7 @@ namespace zenQuery
         public event EventHandler PropertyChanged;
         public Keys _runSnippet; //wykorzystany do funkcji snippetow
         public Keys _runAutocomplete; //wykorzystany do funkcji autocomplete
-
+     
         #region Private Fields
         private const string DateTimeFormatString = "yyyy'-'MM'-'dd HH':'mm':'ss.fff";
         DbClient dbClient;									// DbClient object used to talk to database server
@@ -32,9 +32,10 @@ namespace zenQuery
         bool initializing = true;							// to prevent multiple updates during startup
         bool error = false;									// true if an error was encountered
         string lastDatabase;								// ...so we can tell when the database has changed
-        string resultsType ;  //tutaj z kcomboboxa	
+        string resultsType;  //tutaj z kcomboboxa	
         List<string[]> _Autocomplete;   //do autocomplete
         private long rowCount;//ilosc rekordow
+        public TreeView tree;
         #endregion
 
         /// <summary>
@@ -47,6 +48,7 @@ namespace zenQuery
         /// <param name="provider"> MSSQL,ORACLE sluzy do wypelnienia nippetow</param>
         public frmDocument(DbClient dbClient, IBrowser browser, bool hideBrowser, string provider)
         {
+           
             simpleDebug.dump();
             InitializeComponent();
             this.dbClient = dbClient;
@@ -57,16 +59,16 @@ namespace zenQuery
             HideBrowser = hideBrowser || (browser == null);
             //FileName = "untitled" + untitledCount++.ToString() + ".sql";
             sciDocument.ConfigurationManager.Language = "mssql";//(dbClient.providerr.ToLower()== "mssql") ? "mssql" :"sql" ; //lexer posiada tylko 2 jezyki mssql sql
-            
+
             sciDocument.Margins.Margin0.Width = 30;
             sciDocument.KeyDown += new KeyEventHandler(sciDocument_KeyDown); //klawisze
             sciDocument.KeyUp += new KeyEventHandler(sciDocument_KeyUp);
             sciDocument.AutoComplete.MaxHeight = 18; //ilosc pozycji
-
+          
             //czas
             this.tmrExecTime.Interval = 1000;
             this.tmrExecTime.Tick += new System.EventHandler(this.tmrExecTime_Tick);
-
+            this.tree = treeView;
             statusBar.Font = new Font(statusBar.Font.Name, 8, FontStyle.Bold);
 
             //initialize snippets
@@ -80,7 +82,7 @@ namespace zenQuery
                 MessageBox.Show(this, ex.Message.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
             //inicjalizacja autocomplete
-            _Autocomplete = crycore.AUTOCOMPLETE.autoComplete(ref dbClient );
+            _Autocomplete = crycore.AUTOCOMPLETE.autoComplete(ref dbClient);
         }
 
 
@@ -154,28 +156,35 @@ namespace zenQuery
         }
 
         /// <summary> If a Browser object is available, populate the treeview control on the left </summary>
-        void PopulateBrowser()
+        public void PopulateBrowser()
         {
             simpleDebug.dump();
             if (Browser != null && !HideBrowser && !ClientBusy)
                 try
                 {
                     treeView.Nodes.Clear();
-                    TreeNode[] tn = Browser.GetObjectHierarchy("doc");//mozliwosc odswiezenie
+                    TreeNode[] tn = Browser.GetObjectHierarchy("test");//mozliwosc odswiezenie
                     if (tn == null) HideBrowser = true;
                     else
                     {
                         treeView.Nodes.AddRange(tn);
-                        treeView.Nodes[0].Expand();				// Expand the top level of hierarchy
-                        cboDatabase.Items.Clear();
-                        cboDatabase.Items.Add("<refresh objects...>");
-                        cboDatabase.Items.AddRange(Browser.GetDatabases());
-                        try { cboDatabase.Text = DbClient.Database; }
-                        catch { }
+                       // treeView.Nodes[0].Expand();				// Expand the top level of hierarchy
+
+                        if (cboDatabase.Items.Count == 0)
+                        {
+                            cboDatabase.Items.Clear();
+                            cboDatabase.Items.Add("<refresh objects...>");
+                            cboDatabase.Items.AddRange(Browser.GetDatabases());
+                            try { cboDatabase.Text = DbClient.Database; }
+                            catch { }
+                        }
                     }
+
                 }
                 catch { }
         }
+
+
 
         /// <summary> This is called once a cancel request has been completed </summary>
         void CancelDone()
@@ -262,18 +271,18 @@ namespace zenQuery
                 string query = selectionLength == 0 ? sciDocument.Text : sciDocument.Selection.Text;
                 if (query.Trim() == "") return;
                 //if (query.Length > 4999)
-               // {
+                // {
                 //    MessageBox.Show(this, "Sorry max 5000 chars can be formatted by this version", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 //    return;
-               // }
+                // }
 
                 if (selectionLength == 0)
                     sciDocument.Text = shEngine.cmain.mSTART(query, false, "TXTN", null);//Logic.mMisc.sqlhereWebservice(query);
                 else
                     sciDocument.Selection.Text = shEngine.cmain.mSTART(query, false, "TXTN", null);
-                
-                
-             
+
+
+
 
             }
             catch (Exception)
@@ -295,7 +304,7 @@ namespace zenQuery
         /// If the user has selected text within the query window, just execute the
         /// selected text.  Otherwise, execute the contents of the whole textbox.
         /// </summary>
-        public void Execute(string resultType )
+        public void Execute(string resultType)
         {
             simpleDebug.dump();
             if (RunState != RunState.Idle)
@@ -352,7 +361,7 @@ namespace zenQuery
             Cursor oldCursor = Cursor;
             Cursor = Cursors.WaitCursor;
             panRunStatus.Text = "Executing Query Batch...";
-            dbClient.Execute(this, results, done, failed, query, ResultsInText,resultsType );		// this does the work
+            dbClient.Execute(this, results, done, failed, query, ResultsInText, resultsType);		// this does the work
 
 
             SetRunning(true);
@@ -568,7 +577,7 @@ namespace zenQuery
             rowCount = dt.Rows.Count;
 
             #region Create Context Menu
-            dataGrid.ContextMenuStrip = Logic.EditManager.GetEditManager().GetContextMenuStrip(dataGrid,ref sciDocument   );
+            dataGrid.ContextMenuStrip = Logic.EditManager.GetEditManager().GetContextMenuStrip(dataGrid, ref sciDocument);
             dataGrid.ContextMenuStrip.Opening += delegate(object o, System.ComponentModel.CancelEventArgs e) { dataGrid.Focus(); };
             #endregion
 
@@ -603,7 +612,7 @@ namespace zenQuery
             panRunStatus.Text = "Query batch completed" + (error ? " with errors" : ".");
             // If there were no results from query, display message to provide feedback to user
             if (!ResultsInText && !error && dbClient.Messages.Count == 0)
-                txtResultsBox.AppendText("The command(s) completed successfully." );
+                txtResultsBox.AppendText("The command(s) completed successfully.");
             if (dbClient.Messages.Count > 0)
             {
                 if (txtResultsBox.Text.Length > 0) txtResultsBox.AppendText("\r\n");
@@ -699,7 +708,7 @@ namespace zenQuery
 
 
             string retval = browser.GetActionText(treeView.SelectedNode, mi.Text);
-       
+
             if (retval == null)
             {
                 sciDocument.ResumeLayout();
@@ -865,6 +874,8 @@ namespace zenQuery
             }
         }
 
+
+
         private void treeView_ItemDrag_1(object sender, ItemDragEventArgs e)
         {
             simpleDebug.dump();
@@ -903,7 +914,7 @@ namespace zenQuery
             // Display a context menu if the browser has an action list for the selected node
             if (e.Button == MouseButtons.Right && treeView.SelectedNode != null)
             {
-             
+
                 System.Windows.Forms.ContextMenu cm = new ContextMenu();
 
                 //Dodanie zwyklych akcji
@@ -929,7 +940,7 @@ namespace zenQuery
                 }
 
                 //Dodanie Historii
-                actions = browser.GetActionList(treeView.SelectedNode, "history" );
+                actions = browser.GetActionList(treeView.SelectedNode, "history");
                 if (actions != null)
                 {
                     a = cm.MenuItems.Add("History for this item");
@@ -953,12 +964,12 @@ namespace zenQuery
         {
             int minLength = 6; //minimalna ilosc znakow zeby zaznaczcyc
             int documentLength = this.sciDocument.Text.Length;
-  
+
 
             if (documentLength > 1)
             {
-           
-                if (e.KeyCode  == Keys.OemPeriod ) //kropka
+
+                if (e.KeyCode == Keys.OemPeriod) //kropka
                 {
                     crycore.AUTOCOMPLETE.getAutocomplete(ref sciDocument, ref _Autocomplete);
 
@@ -966,14 +977,14 @@ namespace zenQuery
                 }
             }
 
-          int startMatch = this.sciDocument.Caret.Position;
+            int startMatch = this.sciDocument.Caret.Position;
             int endMatch;
 
-           
+
             char charAfter;
             //40 (  41 )91 [93 ]123 {125 }46 kropka
 
-            if (documentLength >startMatch)
+            if (documentLength > startMatch)
             {
                 charAfter = this.sciDocument.CharAt(startMatch);
                 if (charAfter == 40 || charAfter == 123)
@@ -1091,5 +1102,41 @@ namespace zenQuery
         {
             sciDocument.InsertText(text);
         }
+
+        //private void textBox1_TextChanged(object sender, EventArgs e)
+        //{
+        //    treeView.BeginUpdate();
+        //    treeView.Nodes.Clear();
+        //    PopulateBrowser();
+
+        //    if (this.textBox1.Text != string.Empty)
+        //    {
+        //        foreach (TreeNode _parentNode in treeView.Nodes)
+        //        {
+        //            int nodescount = _parentNode.Nodes.Count;
+
+        //            for (int i = 0; i < nodescount; i++)
+        //            {
+        //                if (nodescount == 0)
+        //                    break;
+
+        //                TreeNode x = _parentNode.Nodes[i];
+        //                if (x == null)
+        //                    break;
+        //                if (x.Text.IndexOf(this.textBox1.Text, StringComparison.InvariantCultureIgnoreCase) == -1)
+        //                {
+        //                    _parentNode.Nodes[i].Remove();
+        //                    i--;
+        //                    nodescount--;
+        //                }
+
+
+        //            }
+        //        }
+        //    }
+
+        //    //enables redrawing tree after all objects have been added
+        //    treeView.EndUpdate();
+        //}
     }
 }

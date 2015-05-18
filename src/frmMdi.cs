@@ -637,6 +637,8 @@ namespace zenQuery
                 qf.ShowHint = WeifenLuo.WinFormsUI.Docking.DockState.Document;
                 qf.Text = "Query" + ++_newDocumentCount;
                 qf.Show(dockPanel);
+
+
             }
         }
 
@@ -767,6 +769,7 @@ namespace zenQuery
 
         private void tsNew_Click(object sender, EventArgs e)
         {
+
             simpleDebug.dump();
             if (IsChildActive())
             {
@@ -800,28 +803,91 @@ namespace zenQuery
                 return;
             }
 
-            Cursor oldCursor = Cursor;
-            Cursor = Cursors.WaitCursor;
-            frmSearch c = new frmSearch(chkobjecttext.Checked, txtsearch.Text, GetQueryChild().DbClient);
-            c.Show();
-            Cursor = oldCursor;
+                foreach (Form frmChild in this.MdiChildren)
+                {
+                    if (frmChild.Name == "frmDocument")
+                    {
+                        frmDocument y = (frmDocument)frmChild;
+                        TreeView treeView = y.tree;
+
+                        treeView.BeginUpdate();
+                        treeView.Nodes.Clear();
+                        y.PopulateBrowser();
+
+                        if (this.txtsearch.Text != string.Empty)
+                        {
+                            foreach (TreeNode _parentNode in treeView.Nodes)
+                            {
+                                int nodescount = _parentNode.Nodes.Count;
+
+                                for (int i = 0; i < nodescount; i++)
+                                {
+                                    if (nodescount == 0)
+                                        break;
+
+                                    TreeNode x = _parentNode.Nodes[i];
+                                    if (x == null)
+                                        break;
+                                    if (x.Text.IndexOf(this.txtsearch.Text, StringComparison.InvariantCultureIgnoreCase) == -1)
+                                    {
+                                        _parentNode.Nodes[i].Remove();
+                                        i--;
+                                        nodescount--;
+                                    }
+
+
+                                }
+                            }
+                        }
+
+                        //enables redrawing tree after all objects have been added
+                        treeView.EndUpdate();
+                    }
+
+                }
+          
+                Cursor oldCursor = Cursor;
+                Cursor = Cursors.WaitCursor;
+
+                //frmDocument qf = new frmDocument(cf.DbClient, cf.Browser, cf.LowBandwidth, "MSSQL");
+                //qf.ShowHint = WeifenLuo.WinFormsUI.Docking.DockState.Document;
+                //qf.Text = "Query" + ++_newDocumentCount;
+                //qf.Show(dockPanel);
+
+
+                frmSearch c = new frmSearch(chkobjecttext.Checked, txtsearch.Text, GetQueryChild().DbClient);
+                c.ShowHint = WeifenLuo.WinFormsUI.Docking.DockState.Document;
+                c.Text = "Search Result" + ++_newDocumentCount;
+                c.Show(dockPanel);
+                //c.Show();
+                Cursor = oldCursor;
+          
         }
+
+
 
         private void chkobjectname_CheckedChanged(object sender, EventArgs e)
         {
-            chkobjecttext.Checked = !chkobjectname.Checked;
+
+            chkobjecttext.Checked = false;
+         
         }
 
         private void chkobjecttext_CheckedChanged(object sender, EventArgs e)
         {
-            chkobjectname.Checked = !chkobjecttext.Checked;
+
+            chkobjectname.Checked = false;
+         
         }
+
 
         private void dockPanel_ActiveDocumentChanged_1(object sender, EventArgs e)
         {
             simpleDebug.dump();
             setFrmDocumentMenu();
         }
+
+    
 
 
 
