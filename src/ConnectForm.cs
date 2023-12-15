@@ -122,7 +122,7 @@ namespace zenQuery
 
             CreateDatabase(); //utworzenie bazy danych 
             fillDG(); //wypelnienie danych
-            crycore.actions.fillActions(); //wypelneinie akcji 
+          //  crycore.actions.fillActions(); //wypelneinie akcji 
         }
 
         void txtprovider_SelectedValueChanged(object sender, EventArgs e)
